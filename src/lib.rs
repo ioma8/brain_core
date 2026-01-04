@@ -180,14 +180,18 @@ impl MindMap {
     }
 
     fn layout_node(&mut self, node_id: &str, x: f32, start_y: f32) -> f32 {
-        let children = if let Some(node) = self.nodes.get(node_id) {
-            node.children.clone()
+        let (children, node_width) = if let Some(node) = self.nodes.get(node_id) {
+            // Estimate node width: ~8 pixels per character + 20 padding + 20 per icon
+            let text_width = node.content.len() as f32 * 8.0;
+            let icons_width = node.icons.len() as f32 * 20.0;
+            let width = text_width + icons_width + 20.0;
+            (node.children.clone(), width.max(100.0)) // minimum 100px
         } else {
             return 0.0;
         };
 
-        let node_h = 50.0; 
-        let x_step = 200.0;
+        let node_h = 50.0;
+        let gap = 50.0; // gap between parent right edge and child left edge
 
         if children.is_empty() {
             if let Some(node) = self.nodes.get_mut(node_id) {
@@ -197,9 +201,12 @@ impl MindMap {
             return node_h;
         }
 
+        // Child x position is parent x + parent width + gap
+        let child_x = x + node_width + gap;
+
         let mut current_y = start_y;
         for child_id in children {
-            let h = self.layout_node(&child_id, x + x_step, current_y);
+            let h = self.layout_node(&child_id, child_x, current_y);
             current_y += h;
         }
 
