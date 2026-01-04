@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::{MindMap, Node, Navigation};
-use uuid::Uuid;
+use crate::{MindMap, Node};
 use quick_xml::de::from_str;
 use quick_xml::se::to_string;
 
