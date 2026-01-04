@@ -1,5 +1,6 @@
 use uuid::Uuid;
 pub mod storage;
+pub mod xmind;
 
 use serde::{Deserialize, Serialize};
 
