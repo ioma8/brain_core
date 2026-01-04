@@ -216,52 +216,8 @@ impl MindMap {
         }
     }
 
-    pub fn compute_layout(&mut self) {
-        let root_id = self.root_id.clone();
-        self.layout_node(&root_id, 0.0, 0.0);
-    }
-
-    fn layout_node(&mut self, node_id: &str, x: f32, start_y: f32) -> f32 {
-        let (children, node_width) = if let Some(node) = self.nodes.get(node_id) {
-            // Estimate node width: ~8 pixels per character + 20 padding + 20 per icon
-            let text_width = node.content.len() as f32 * 8.0;
-            let icons_width = node.icons.len() as f32 * 20.0;
-            let width = text_width + icons_width + 20.0;
-            (node.children.clone(), width.max(100.0)) // minimum 100px
-        } else {
-            return 0.0;
-        };
-
-        let node_h = 50.0;
-        let gap = 50.0; // gap between parent right edge and child left edge
-
-        if children.is_empty() {
-            if let Some(node) = self.nodes.get_mut(node_id) {
-                node.x = x;
-                node.y = start_y;
-            }
-            return node_h;
-        }
-
-        // Child x position is parent x + parent width + gap
-        let child_x = x + node_width + gap;
-
-        let mut current_y = start_y;
-        for child_id in children {
-            let h = self.layout_node(&child_id, child_x, current_y);
-            current_y += h;
-        }
-
-        let total_h = current_y - start_y;
-        let parent_y = start_y + (total_h / 2.0);
-
-        if let Some(node) = self.nodes.get_mut(node_id) {
-            node.x = x;
-            node.y = parent_y;
-        }
-
-        total_h
-    }
+    // Layouting is intentionally NOT done on the backend.
+    // The frontend has access to real font metrics (Canvas measureText), so layout belongs there.
 
     pub fn select_node(&mut self, node_id: &str) -> Result<(), String> {
         if self.nodes.contains_key(node_id) {
@@ -439,31 +395,6 @@ mod tests {
             map.add_sibling(&root_id, "Root Sibling".to_string())
                 .is_err()
         );
-    }
-
-    #[test]
-    fn test_layout() {
-        let mut map = MindMap::new();
-        let root_id = map.root_id.clone();
-
-        let child1 = map.add_child(&root_id, "Child 1".to_string()).unwrap();
-        let child2 = map.add_child(&root_id, "Child 2".to_string()).unwrap();
-        let grand1 = map.add_child(&child1, "Grand 1".to_string()).unwrap();
-
-        map.compute_layout();
-
-        let root = map.nodes.get(&root_id).unwrap();
-        let c1 = map.nodes.get(&child1).unwrap();
-        let c2 = map.nodes.get(&child2).unwrap();
-        let g1 = map.nodes.get(&grand1).unwrap();
-
-        // Check X positions (Rightwards growth)
-        assert!(c1.x > root.x);
-        assert!(c2.x > root.x);
-        assert!(g1.x > c1.x);
-
-        // Check Y separation
-        assert!(c1.y != c2.y);
     }
 
     #[test]

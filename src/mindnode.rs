@@ -116,8 +116,6 @@ pub fn from_mindnode(data: &[u8]) -> Result<MindMap, String> {
     file.read_to_string(&mut xml_content)
         .map_err(|e| e.to_string())?;
 
-    println!("DEBUG XML: {}", xml_content);
-
     let mindnode_map: MindNodeMap = from_str(&xml_content).map_err(|e| e.to_string())?;
 
     let mut nodes = HashMap::new();

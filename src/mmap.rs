@@ -116,8 +116,6 @@ pub fn from_mmap(data: &[u8]) -> Result<MindMap, String> {
         return Err("Document.xml not found in archive".to_string());
     }
 
-    println!("DEBUG XML: {}", xml_content);
-
     let mmap_map: MmapMap = from_str(&xml_content).map_err(|e| e.to_string())?;
 
     let mut nodes = HashMap::new();

@@ -157,7 +157,6 @@ mod tests {
         map.add_child(&root_id, "Child 1".to_string()).unwrap();
 
         let xml = to_smmx(&map).unwrap();
-        println!("DEBUG XML: {}", xml);
         assert!(!xml.is_empty());
 
         let loaded_map = from_smmx(&xml).unwrap();

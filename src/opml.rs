@@ -176,8 +176,6 @@ mod tests {
         map.add_child(&root_id, "Child 2".to_string()).unwrap();
 
         let opml_str = to_opml(&map).unwrap();
-        println!("Generated OPML: {}", opml_str);
-
         let loaded_map = from_opml(&opml_str).unwrap();
 
         assert_eq!(loaded_map.nodes.len(), 4);

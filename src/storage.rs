@@ -164,13 +164,7 @@ mod tests {
         let _child2 = map.add_child(&root_id, "Child 2".to_string()).unwrap();
         let _grand1 = map.add_child(&child1, "Grand 1".to_string()).unwrap();
 
-        // Compute layout to have non-zero coords
-        map.compute_layout();
-
         let xml_output = to_xml(&map).expect("Failed to export to XML");
-
-        // Debug output
-        println!("XML Output: {}", xml_output);
 
         let loaded_map = from_xml(&xml_output).expect("Failed to import from XML");
 
