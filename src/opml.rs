@@ -83,7 +83,7 @@ pub fn from_opml(xml: &str) -> Result<MindMap, String> {
     let opml: Opml = from_str(xml).map_err(|e| e.to_string())?;
 
     let mut nodes = HashMap::new();
-    let mut root_id = String::new();
+    let root_id;
 
     // OPML can have multiple top-level outlines in body, but MindMap has one root.
     // If multiple, we create a virtual root. If one, we use it.
