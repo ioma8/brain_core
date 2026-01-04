@@ -13,6 +13,13 @@ pub struct XmlMap {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename = "icon")]
+pub struct XmlIcon {
+    #[serde(rename = "@BUILTIN")]
+    pub builtin: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename = "node")]
 pub struct XmlNode {
     #[serde(rename = "@ID")]
@@ -28,7 +35,8 @@ pub struct XmlNode {
     #[serde(rename = "@POSITION", skip_serializing_if = "Option::is_none")]
     pub position: Option<String>,
     
-    // X/Y omitted for compatibility
+    #[serde(rename = "icon", default)]
+    pub icons: Vec<XmlIcon>,
     
     #[serde(rename = "node", default)]
     pub children: Vec<XmlNode>,
@@ -36,7 +44,7 @@ pub struct XmlNode {
 
 pub fn to_xml(map: &MindMap) -> Result<String, String> {
     let root = map.nodes.get(&map.root_id).ok_or("Root not found")?;
-    let xml_root = to_xml_node(root, map);
+    let xml_root = to_xml_node(root, map, true); 
     
     let xml_map = XmlMap {
         version: "1.0.1".to_string(),
@@ -48,16 +56,20 @@ pub fn to_xml(map: &MindMap) -> Result<String, String> {
     Ok(xml)
 }
 
-fn to_xml_node(node: &Node, map: &MindMap) -> XmlNode {
+fn to_xml_node(node: &Node, map: &MindMap, _is_root: bool) -> XmlNode {
     let mut children = Vec::new();
     for child_id in &node.children {
         if let Some(child_node) = map.nodes.get(child_id) {
-            children.push(to_xml_node(child_node, map));
+            children.push(to_xml_node(child_node, map, false));
         }
     }
     
+    let mut icons = Vec::new();
+    for icon_name in &node.icons {
+        icons.push(XmlIcon { builtin: icon_name.clone() });
+    }
+    
     let position = if let Some(parent_id) = &node.parent {
-        // If parent is root, position is right
         if parent_id == &map.root_id {
             Some("right".to_string())
         } else {
@@ -73,6 +85,7 @@ fn to_xml_node(node: &Node, map: &MindMap) -> XmlNode {
         created: node.created,
         modified: node.modified,
         position,
+        icons,
         children,
     }
 }
@@ -81,7 +94,6 @@ pub fn from_xml(xml: &str) -> Result<MindMap, String> {
     let xml_map: XmlMap = from_str(xml).map_err(|e| e.to_string())?;
     
     let mut nodes = std::collections::HashMap::new();
-    // Use the ID from the XML root as our root_id
     let root_id = xml_map.root.id.clone(); 
     
     helpers::flatten_nodes(xml_map.root, None, &mut nodes);
@@ -109,10 +121,10 @@ mod helpers {
             flatten_nodes(child, Some(node_id.clone()), nodes);
         }
         
-        // Use XML timestamps if present, or default to now?
-        // Struct definition has u64. XML has u64.
-        // If invalid? Serde will fail or we handle defaults?
-        // MindMap loaded from XML should trust XML.
+        let mut icons = Vec::new();
+        for icon in xml_node.icons {
+            icons.push(icon.builtin);
+        }
         
         let node = Node {
             id: node_id.clone(),
@@ -123,6 +135,7 @@ mod helpers {
             y: 0.0,
             created: xml_node.created,
             modified: xml_node.modified,
+            icons,
         };
         
         nodes.insert(node_id, node);

@@ -13,6 +13,8 @@ pub struct Node {
     pub y: f32,
     pub created: u64,
     pub modified: u64,
+    #[serde(default)]
+    pub icons: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -42,6 +44,7 @@ impl MindMap {
             y: 0.0,
             created: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64,
             modified: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64,
+            icons: Vec::new(),
         };
         let mut nodes = std::collections::HashMap::new();
         nodes.insert(root_id.clone(), root);
@@ -63,6 +66,7 @@ impl MindMap {
             y: 0.0,
             created: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64,
             modified: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64,
+            icons: Vec::new(),
         };
 
         self.nodes.insert(new_id.clone(), new_node);
@@ -134,6 +138,7 @@ impl MindMap {
             y: 0.0,
             created: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64,
             modified: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64,
+            icons: Vec::new(),
         };
 
         self.nodes.insert(new_id.clone(), new_node);
@@ -147,6 +152,26 @@ impl MindMap {
         }
 
         Ok(new_id)
+    }
+
+    pub fn add_icon(&mut self, node_id: &str, icon: String) -> Result<(), String> {
+        if let Some(node) = self.nodes.get_mut(node_id) {
+            node.icons.push(icon);
+            node.modified = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64;
+            Ok(())
+        } else {
+            Err("Node not found".to_string())
+        }
+    }
+
+    pub fn remove_last_icon(&mut self, node_id: &str) -> Result<(), String> {
+        if let Some(node) = self.nodes.get_mut(node_id) {
+            node.icons.pop();
+            node.modified = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64;
+            Ok(())
+        } else {
+           Err("Node not found".to_string())
+        }
     }
 
     pub fn compute_layout(&mut self) {
