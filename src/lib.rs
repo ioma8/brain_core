@@ -138,8 +138,14 @@ impl MindMap {
             i += 1;
         }
 
+        let removed_selected = to_remove.contains(&self.selected_node_id);
+
         for id in to_remove {
             self.nodes.remove(&id);
+        }
+
+        if removed_selected {
+            self.selected_node_id = parent_id;
         }
 
         Ok(())
