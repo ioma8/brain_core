@@ -154,15 +154,40 @@ mod helpers {
 mod tests {
     use super::*;
     use crate::MindMap;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn add_child_for_test(map: &mut MindMap, parent_id: &str, content: &str) -> String {
+        let id = format!("node-{}", map.nodes.len());
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as u64;
+        let node = Node {
+            id: id.clone(),
+            content: content.to_string(),
+            children: Vec::new(),
+            parent: Some(parent_id.to_string()),
+            x: 0.0,
+            y: 0.0,
+            created: timestamp,
+            modified: timestamp,
+            icons: Vec::new(),
+        };
+        map.nodes.insert(id.clone(), node);
+        if let Some(parent) = map.nodes.get_mut(parent_id) {
+            parent.children.push(id.clone());
+        }
+        id
+    }
 
     #[test]
     fn test_export_import() {
         let mut map = MindMap::new();
         let root_id = map.root_id.clone();
 
-        let child1 = map.add_child(&root_id, "Child 1".to_string()).unwrap();
-        let _child2 = map.add_child(&root_id, "Child 2".to_string()).unwrap();
-        let _grand1 = map.add_child(&child1, "Grand 1".to_string()).unwrap();
+        let child1 = add_child_for_test(&mut map, &root_id, "Child 1");
+        let _child2 = add_child_for_test(&mut map, &root_id, "Child 2");
+        let _grand1 = add_child_for_test(&mut map, &child1, "Grand 1");
 
         let xml_output = to_xml(&map).expect("Failed to export to XML");
 

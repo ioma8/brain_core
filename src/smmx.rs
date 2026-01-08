@@ -148,13 +148,34 @@ fn now_millis() -> u64 {
 mod tests {
     use super::*;
 
+    fn add_child_for_test(map: &mut MindMap, parent_id: &str, content: &str) -> String {
+        let id = format!("node-{}", map.nodes.len());
+        let timestamp = now_millis();
+        let node = Node {
+            id: id.clone(),
+            content: content.to_string(),
+            children: Vec::new(),
+            parent: Some(parent_id.to_string()),
+            x: 0.0,
+            y: 0.0,
+            created: timestamp,
+            modified: timestamp,
+            icons: Vec::new(),
+        };
+        map.nodes.insert(id.clone(), node);
+        if let Some(parent) = map.nodes.get_mut(parent_id) {
+            parent.children.push(id.clone());
+        }
+        id
+    }
+
     #[test]
     fn test_smmx_serialization() {
         let mut map = MindMap::new();
         let root_id = map.root_id.clone();
         map.nodes.get_mut(&root_id).unwrap().content = "Root Smmx".to_string();
 
-        map.add_child(&root_id, "Child 1".to_string()).unwrap();
+        add_child_for_test(&mut map, &root_id, "Child 1");
 
         let xml = to_smmx(&map).unwrap();
         assert!(!xml.is_empty());
